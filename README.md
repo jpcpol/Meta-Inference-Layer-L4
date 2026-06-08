@@ -1,61 +1,104 @@
 # CAL-L4 — Meta-Inference Layer
 
-**Parte de:** [CAL — Cognitive Abstraction Layers](../)  
-**Autor:** Juan Pablo Chancay (Aural Syncro)  
-**Estado:** En desarrollo — baseline O(n²) activo; M(V) diferido hasta gate-C  
-**Venue objetivo:** NeurIPS / ICML  
-**Colaboración:** AMD-Instinct Labs (`fa_dme` en MI300X)
+**Part of:** [CAL — Cognitive Abstraction Layers](https://github.com/jpcpol/Cognitive-Abstraction-Layer-CAL)  
+**Author:** Juan Pablo Chancay · Aural Syncro  
+**Status:** In development — O(n²) baseline active; M(V) deferred until gate-C  
+**Target venue:** NeurIPS / ICML  
+**Collaboration:** AMD-Instinct Labs (`fa_dme` on MI300X)  
+**License:** CC BY-NC 4.0 (docs) · AGPL-3.0 (src)
 
-## Definición formal
+---
+
+## What is L4?
+
+L4 is the **Meta-Inference Layer** of the CAL architecture. It defines the inference function that maps a compressed tensor volume (L3 output) to actionable governance decisions — without requiring human working memory as a substrate.
 
 ```
-L4: M(V) → {decisions, predictions, adaptations}
+L4:  M(V) → {decisions, predictions, adaptations}
 ```
 
-Meta-inferencia sobre volúmenes tensoriales comprimidos. Operación sin memoria
-de trabajo humana como sustrato.
+Where:
+- `V` — tensor volume produced by the L3 composition operator C
+- `M(V)` — meta-inference function; operates on compressed structure, not raw artifacts
+- Output — governance signals: deploy/block decisions, system-wide predictions, policy adaptations
+
+---
 
 ## L4 Efficiency Hypothesis (§6.2 CAL pre-paper)
 
-> Existe una arquitectura de inferencia tal que el costo de M(V) escala con κ(V)
-> — complejidad estructural de V — donde κ(V) crece significativamente más lento
-> que O(n²) en n (conteo de artefactos del espacio L0 crudo).
+> There exists an inference architecture such that the cost of M(V) scales with κ(V) — the structural complexity of V (effective rank, attractor entropy, causal graph size) — where κ(V) grows **significantly slower than O(n²)** in n (raw artifact count at L0).
 
-Probar esto requiere: (a) C definido + κ(V) concreto, (b) comparación M(V) vs
-flat-context O(n²), (c) accuracy de gobernanza bajo ambos enfoques.
+Proving this requires three simultaneous conditions:
+
+| Condition | Status |
+|-----------|--------|
+| **(a)** C defined + κ(V) concrete (L3 gate) | Pending — blocked on L3 |
+| **(b)** Cost comparison M(V) vs flat-context O(n²) | AMD baseline active |
+| **(c)** Governance accuracy under both approaches | L2 corpus provides this |
+
+**This hypothesis cannot be claimed as proven until all three conditions are met.**
+
+---
 
 ## Representational Convergence Conjecture — RCC (§6.4)
 
-El estado de gobernanza óptimo puede ser extraíble directamente de las
-activaciones de atención durante pre-fill — sin segunda pasada LLM-QA.
-El `probe_mfma_mapping.hip` de AMD-Instinct ya caracterizó el mapeo
-lane↔output de `v_mfma_f32_16x16x16f16`, el acceso de bajo nivel que requeriría.
+> The optimal governance state is extractable directly from attention activations during pre-fill — without a second LLM-QA pass.
 
-## Roadmap con gates
+AMD-Instinct's `probe_mfma_mapping.hip` already characterized the lane↔output mapping of `v_mfma_f32_16x16x16f16` — the low-level register access this would require. This makes the RCC empirically approachable once C exists.
 
-| Tarea | Estado | Bloqueante |
-| --- | --- | --- |
-| Baseline flat-context O(n²) (`fa_robust` seqLen sweep) | AMD — listo en frío | — |
-| Confirmar régimen cuadrático (log-log, exp ≈ 2) | Pendiente (próxima VM AMD) | — |
-| Operador C definido (L3) | Pendiente | gate L3 |
-| Kernel proxy M(V): O(n²) flat vs O(κ) | Diferido (AMD post-gate) | C/L3 |
-| Probar L4 Efficiency Hypothesis en sintético | Diferido | M(V) + C |
+---
 
-## Estructura (en construcción)
+## AMD-Instinct Collaboration
+
+`fa_dme` (Flash Attention with DME async, validated on MI300X at D=128, max_err < 0.0001) has a dual role in L4:
+
+| Role | When | Description |
+|------|------|-------------|
+| **Rol 1 — Baseline** | Now | Measures the flat-context O(n²) attention cost curve that condition (b) requires |
+| **Rol 2 — Proxy M(V)** | Post gate-C | Kernel from which the RCC extracts governance signal V during pre-fill |
+
+**Scope discipline:**
+- ✅ Measure real O(n²) curve on MI300X (seqLen sweep 512→4k, log-log fit, confirm exponent ≈ 2)
+- ✅ Publish citable note: "flat-context attention cost on MI300X as CAL-L4 baseline"
+- ❌ Do NOT claim L4 Efficiency Hypothesis proven without C + M(V) implemented
+- Tucker C validated on synthetic is *preliminary evidence* — same epistemic status as n=40 in L2
+
+---
+
+## Roadmap with Gates
+
+| Task | Owner | Status | Blocker |
+|------|-------|--------|---------|
+| Baseline flat-context O(n²) (`fa_robust` seqLen sweep 512→4k) | AMD | Ready (cold) | — |
+| Confirm quadratic regime (log-log, exponent ≈ 2) | AMD | Next VM session | — |
+| Publish citable baseline note | AMD | Pending | log-log result |
+| Composition operator C validated (L3) | L3 | Pending | L3 gate |
+| Kernel proxy M(V): O(n²) flat vs O(κ) | AMD | Deferred | C / L3 |
+| L4 Efficiency Hypothesis — synthetic test | Both | Deferred | M(V) + C |
+
+---
+
+## Repository Structure
 
 ```
 L4/
 ├── README.md
-├── paper/              ← paper L4 (en desarrollo)
-├── src/                ← implementación M(V) (post-gate-C)
-├── benchmarks/         ← baseline O(n²) + contraste O(κ)
-└── experiments/        ← L4 Efficiency Hyp. tests
+├── paper/                  ← L4 paper (in development)
+├── src/
+│   └── meta_inference/     ← M(V) implementation (post gate-C)
+├── benchmarks/
+│   ├── baseline_quadratic/ ← O(n²) empirical curve from AMD-Instinct
+│   └── efficiency_contrast/ ← O(n²) flat vs O(κ) comparison
+└── experiments/
+    └── efficiency_hypothesis/ ← L4 Efficiency Hyp. tests
 ```
 
-## Colaboración AMD-Instinct
+---
 
-`fa_dme` (Flash Attention DME, validado MI300X) tiene doble rol en L4:
-- **Rol 1 (ahora):** medir la curva flat-context O(n²) — baseline empírico de la hipótesis
-- **Rol 2 (post-gate-C):** kernel del cual la RCC extrae señal V en pre-fill
+## Related Repos
 
-Registro canónico de la colaboración: `Obsidian/wiki/proyectos/cal-collaboration.md`
+| Repo | Role |
+|------|------|
+| [CAL](https://github.com/jpcpol/Cognitive-Abstraction-Layer-CAL) | Framework root — pre-paper, architecture |
+| [L2 — TCO](https://github.com/jpcpol/TENSOR-BASED-COGNITIVE-OVERSIGHT-TCO) | Provides governance accuracy baseline (condition c) |
+| [L3 — Tensor Volume](https://github.com/jpcpol/Tensor-Volume-Layer-L3) | Provides V and κ(V) — gate for Roles 1→2 transition |
