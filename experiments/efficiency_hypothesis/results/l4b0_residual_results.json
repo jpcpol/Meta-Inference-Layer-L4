@@ -1,0 +1,63 @@
+{
+  "experiment": "L4-B0 \u2014 Residual Characterization",
+  "pre_registration": "PRE_REGISTRATION_L4B0_RESIDUAL.md (commit ad668ca)",
+  "operator_tucker": [
+    8,
+    3,
+    3,
+    3,
+    6
+  ],
+  "delta_w": 0.1,
+  "per_graph": {
+    "G1": {
+      "U0": 0.8638950933175028,
+      "dU": 0.1361049066824972,
+      "dU_B1": 0.029365641898058237,
+      "dU_B2": 0.0,
+      "dU_B3lin": 0.10673926478443896,
+      "B4_support_share": 0.0,
+      "B1_n": 1,
+      "B2_n": 0,
+      "B4_n": 0,
+      "support_n": 2
+    },
+    "G2": {
+      "U0": 0.8400733461542704,
+      "dU": 0.15992665384572957,
+      "dU_B1": 0.0502356689942669,
+      "dU_B2": 0.0,
+      "dU_B3lin": 0.10969098485146267,
+      "B4_support_share": 0.0,
+      "B1_n": 2,
+      "B2_n": 0,
+      "B4_n": 0,
+      "support_n": 2
+    },
+    "G3": {
+      "U0": 0.8828122342159439,
+      "dU": 0.1171877657840561,
+      "dU_B1": 0.0,
+      "dU_B2": 0.0,
+      "dU_B3lin": 0.1171877657840561,
+      "B4_support_share": 0.0,
+      "B1_n": 0,
+      "B2_n": 0,
+      "B4_n": 0,
+      "support_n": 2
+    }
+  },
+  "aggregate": {
+    "dU": 0.13773977543742763,
+    "dU_B1": 0.026533770297441712,
+    "dU_B2": 0.0,
+    "dU_B3lin": 0.11120600513998591,
+    "U0": 0.8622602245625725,
+    "B4_support_share": 0.0
+  },
+  "share_lin": 0.192636950460947,
+  "D1_reproducible": true,
+  "D2_sum_measured": 0.026533770297441712,
+  "D3_machinery": "ParCorr lag-1 (frozen) + one declared tau_max=3 aux for B4; no non-linear estimator (GPDC/CMIknn infeasible in-env, and redundant with the B1+B2 complement since V' is linear).",
+  "decision": "NO-GO for a single linear V' \u2014 residual lives in non-linearity/lag>1; the dual (V_Tucker, G_pruned) is the terminal representation. Publish as a negative result (Causality \u227b Reconstruction)."
+}
