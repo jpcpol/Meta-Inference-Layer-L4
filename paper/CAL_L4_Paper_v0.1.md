@@ -162,7 +162,7 @@ Failure of (b) — where minimizing governance-SID and minimizing generation los
 
 ### 5.1 Dual Role of `fa_dme`
 
-`fa_dme` (Flash Attention with DME async, validated on MI300X: D=128, max_err < 0.0001, measured at 10.45 TFLOPS) has two distinct roles in L4:
+`fa_dme` (Flash Attention with DME async, validated on MI300X at D=64, seqLen=512, 8 heads: 82.4 µs, max_err < 0.0001 — an 18% end-to-end speedup over the naive baseline) has two distinct roles in L4. Note on throughput: the MFMA-tile kernel (`fa_mfma_dsweep`) reaches **10.45 TFLOPS at D=128 vs 6.19 at D=64 (+69%)** — the matrix cores scale strongly once the head dimension is large enough. The baseline sweep (Rol 1) therefore uses the D=128 path for the LLM-realistic head dimension.
 
 | Role | Timeline | Description |
 |------|----------|-------------|
@@ -171,12 +171,19 @@ Failure of (b) — where minimizing governance-SID and minimizing generation los
 
 ### 5.2 Baseline Measurement Protocol (Rol 1)
 
-Experiment: `fa_robust.hip` seqLen sweep  
-- seqLen: {512, 768, 1024, 1536, 2048, 3072, 4096}  
-- D = 128 (validated dimension)  
-- Metric: TFLOPS per seqLen; log-log regression to estimate exponent  
-- Accept: exponent ∈ [1.8, 2.2] (confirms quadratic regime within measurement uncertainty)  
-- Output: citable note "flat-context attention cost on MI300X as CAL-L4 baseline" (citable by CAL paper)
+Experiment: `fa_robust.hip` seqLen sweep (implemented, cold-staged in
+`amd-instinct-labs/research/flash-attention-mi300x/`, awaiting VM run)
+- seqLen: {512, 768, 1024, 1536, 2048, 3072, 4096} — all multiples of Br=16 and Bc=64
+- D = 128 (LLM-realistic head dimension)
+- Metric: median latency per seqLen; log-log least-squares regression → exponent p + R²
+- Accept: exponent p ∈ [1.8, 2.2] (confirms quadratic regime within measurement uncertainty)
+- The kernel prints the fitted exponent, R², and a CONFIRMED/OUTSIDE verdict directly
+- Output: citable note "flat-context attention cost on MI300X as CAL-L4 baseline"
+
+The same `fa_robust` kernel also sweeps GQA (Llama-3 style 32q/8kv) and causal masking,
+so the baseline measurement is taken on a kernel validated against LLM-realistic shapes,
+not a toy. Correctness is checked on small configs (CPU reference) covering MHA, GQA,
+and causal before the large timing-only runs.
 
 ### 5.3 Scope Discipline
 
