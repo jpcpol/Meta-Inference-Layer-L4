@@ -7,9 +7,9 @@ jpcpol@gmail.com
 
 **Collaboration:** AMD-Instinct Labs (`fa_dme` on MI300X)
 
-**Version:** 0.3 — Draft / Working Paper (L3 gate closed · κ vs n² mechanism contrast run)  
+**Version:** 0.4 — Draft / Working Paper (L3 gate closed · κ vs n² mechanism contrast run · L4-B0 residual NO-GO)  
 **Date:** June 2026  
-**Status:** L3 gate CLOSED (2026-06). Conditions (a) C+κ(V) and (b) O(n²) baseline both MET, and the **κ vs n² cost contrast has been executed on MI300X** (mechanism confirmed: flat-context couples to n at n^1.91, governance state decouples — §5.4). Remaining gate: (c) governance accuracy (RCT-adjacent). M(V) reference operator validated (L4-A); the at-scale/accuracy contrast is the active work. Results frozen (no L4-B until the freeze holds).  
+**Status:** L3 gate CLOSED (2026-06). Conditions (a) C+κ(V) and (b) O(n²) baseline both MET, and the **κ vs n² cost contrast has been executed on MI300X** (mechanism confirmed: flat-context couples to n at n^1.91, governance state decouples — §5.4). Remaining gate: (c) governance accuracy (RCT-adjacent). M(V) reference operator validated (L4-A). The residual characterization (L4-B0, §5.5) ran after the freeze and returned **NO-GO**: the residual is 81% non-linear, so the dual `(V_Tucker, G_pruned)` is terminal at this rank and L4-B (single linear V′) is not opened. The at-scale/accuracy contrast (condition c) is the active work.  
 **Part of:** CAL architecture — [CAL pre-paper DOI 10.5281/zenodo.20430343](https://doi.org/10.5281/zenodo.20430343)  
 **Repository:** [github.com/jpcpol/Meta-Inference-Layer-L4](https://github.com/jpcpol/Meta-Inference-Layer-L4)  
 **License:** CC BY-NC 4.0 (this document) · AGPL-3.0 (src/)  
@@ -260,10 +260,55 @@ comparable to the O(n²) side) was **omitted** per the pre-registration: the
 n-independent read-count is already the correct cost object, and a new MFMA kernel
 for a 1296-element core was not justified. It is noted as future work.
 
-**Freeze.** Per the methodological review, S5 results are frozen: the residual-25%
-characterization (precondition for L4-B's single-representation V′) does not open
-until the freeze holds. This prevents getting ahead of L4-B before knowing what the
-residual contains.
+**Freeze.** Per the methodological review, S5 results were frozen before the residual
+characterization (§5.5) opened: this prevented getting ahead of L4-B before knowing
+what the residual contains. With the freeze held, that characterization (L4-B0) then
+ran — and decided against L4-B (§5.5).
+
+### 5.5 Residual Characterization (L4-B0) — and why L4-B is not opened
+
+With S5 frozen, we pre-registered (`PRE_REGISTRATION_L4B0_RESIDUAL.md`) and ran a
+**descriptive** characterization of the residual `ΔU = 1 − U(Φ_masked) ≈ 0.138` that
+the Form-1 prune did not recover. The question is the prior for L4-B: of that residual,
+what fraction is **linear-edge-representable** (structure a linear inverse projection
+could fold into a single V′) versus not carriable by a single linear V′? Because U is
+the Pearson correlation of the off-diagonal entries of the continuous **signed** flow
+matrix Φ (ParCorr val_matrix, lag 1), the attribution is performed in Φ-space, not on
+edge sets. Two buckets are linear-edge-representable — **B1** (on-support magnitude
+error, same sign) and **B2** (sign flip) — and their complement **B3-lin** plus any
+**B4** (lag>1) structure is not. We attribute ΔU by correcting each bucket's entries to
+their raw Φ value and recomputing U, then test `share_lin = (ΔU_{B1}+ΔU_{B2})/ΔU`
+against a pre-committed GO≥0.70 / CONDITIONAL / NO-GO<0.40 rule.
+
+| Bucket | ΔU (mean G1/G2/G3) | share of ΔU | linear-V′-carriable |
+|--------|-----|-----|-----|
+| B1 — magnitude | +0.027 | 19.3% | yes |
+| B2 — sign flip | +0.000 | 0.0% | yes |
+| **B3-lin — complement** | **+0.111** | **80.7%** | **no (non-linearity)** |
+| B4 — lag>1 | — | 0.0% of support | n/a (absent) |
+
+The result is **`share_lin = 0.193` → NO-GO** (reproducibility check D1 passed; the ΔU
+budget closes exactly). Only 19.3% of the residual is linear-edge-representable; 80.7%
+lives in B3-lin. B4 = 0% confirms the residual is **not** higher-order temporal (the
+S1-bis corpus is lag-1 by construction), so what a single linear V′ cannot carry is
+**non-linearity**, not lag structure. Folding the prune into a single linear volume
+therefore cannot rescue the causal information the dual carries in `G_pruned`.
+
+**Consequence for the architecture.** The dual representation `V = (V_Tucker, G_pruned)`
+is the **terminal** form at this rank: L4-B (a single-V′ via inverse graph→tensor
+projection) is **not opened**, because its premise — that the residual is linear
+structure an inverse projection can absorb — is refuted. This bounds the RCC (§4): a
+*single linear* compressed state cannot simultaneously be κ-minimal and causally
+complete here; the convergence the RCC conjectures, if it exists, is not a low-rank
+linear folding at this scale. We report this as a **negative result** — the second time
+in the C programme that the ordering *causality ≻ reconstruction* prevents a collapse
+(after the S3-bis refutation of low-rank Tucker as a causality-preserving C).
+
+A direct non-linear measurement of B3 (GPDC/CMIknn) was not run: both were infeasible
+in the frozen analysis environment, and — since L4-B's V′ is linear — a non-linear test
+is redundant with the linear complement (whatever the linear machinery cannot recover is
+exactly what a linear V′ could not carry). No environment mutation was introduced, so the
+ParCorr machinery that validated L3 stays frozen.
 
 ---
 
@@ -280,8 +325,9 @@ residual contains.
 | κ vs n² cost contrast on MI300X — **mechanism** (seqLen 512→4k, D=128) | AMD-Instinct | ✅ Done (S5, 2026-06) — D(n)→52.8×, mechanism confirmed; frozen | — |
 | Pre-register L4 Efficiency Hypothesis test (governance-accuracy, cond. c) | L4 | Pending | governance corpus (RCT) |
 | L4 Efficiency Hypothesis — full test | Both | Pending — gates (a),(b) met | condition (c) |
-| Characterize residual 25% → L4-B (single-V via inverse projection) | L3/L4 | Frozen — opens after AMD contrast freeze | residual characterization |
-| RCC empirical probe (φ′ coupling test) | AMD-Instinct + L4 | Long-term | All above |
+| Characterize residual 25% (L4-B0) | L3/L4 | ✅ Done (2026-06) — share_lin=0.193, residual 81% non-linear (§5.5) | freeze held |
+| L4-B: single-V′ via inverse projection | L3/L4 | ❌ Not opened — L4-B0 NO-GO; the dual is terminal at this rank | — |
+| RCC empirical probe (φ′ coupling test) | AMD-Instinct + L4 | Long-term — bounded by L4-B0 (no single *linear* V′) | All above |
 
 ---
 
