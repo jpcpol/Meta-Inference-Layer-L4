@@ -11,6 +11,7 @@ jpcpol@gmail.com
 **Date:** June 2026  
 **Status:** L3 gate CLOSED (2026-06). Conditions (a) C+κ(V) and (b) O(n²) baseline both MET, and the **κ vs n² cost contrast has been executed on MI300X** (mechanism confirmed: flat-context couples to n at n^1.91, governance state decouples — §5.4). Remaining gate: (c) governance accuracy (RCT-adjacent). M(V) reference operator validated (L4-A). The residual characterization (L4-B0, §5.5) ran after the freeze and returned **NO-GO**: the residual is 81% non-linear, so the dual `(V_Tucker, G_pruned)` is terminal at this rank and L4-B (single linear V′) is not opened. The at-scale/accuracy contrast (condition c) is the active work.  
 **Part of:** CAL architecture — [CAL pre-paper DOI 10.5281/zenodo.20430343](https://doi.org/10.5281/zenodo.20430343)  
+**This deposit:** [10.5281/zenodo.20634465](https://doi.org/10.5281/zenodo.20634465) (Zenodo, v0.4)  
 **Repository:** [github.com/jpcpol/Meta-Inference-Layer-L4](https://github.com/jpcpol/Meta-Inference-Layer-L4)  
 **License:** CC BY-NC 4.0 (this document) · AGPL-3.0 (src/)  
 **Target venue:** NeurIPS / ICML
