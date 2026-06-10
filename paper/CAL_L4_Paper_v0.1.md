@@ -7,9 +7,9 @@ jpcpol@gmail.com
 
 **Collaboration:** AMD-Instinct Labs (`fa_dme` on MI300X)
 
-**Version:** 0.1 — Draft / Working Paper  
+**Version:** 0.2 — Draft / Working Paper (L3 gate closed)  
 **Date:** June 2026  
-**Status:** Pre-experimental. M(V) implementation deferred until gate-C (L3). Baseline measurements active.  
+**Status:** L3 gate CLOSED (2026-06). Conditions (a) C+κ(V) and (b) O(n²) baseline both MET; the κ vs n² cost contrast is now runnable. Remaining gate: (c) governance accuracy (RCT-adjacent). M(V) reference operator validated (L4-A); production M(V) and the at-scale hardware contrast are the active work.  
 **Part of:** CAL architecture — [CAL pre-paper DOI 10.5281/zenodo.20430343](https://doi.org/10.5281/zenodo.20430343)  
 **Repository:** [github.com/jpcpol/Meta-Inference-Layer-L4](https://github.com/jpcpol/Meta-Inference-Layer-L4)  
 **License:** CC BY-NC 4.0 (this document) · AGPL-3.0 (src/)  
@@ -25,7 +25,7 @@ We formalize the **L4 Efficiency Hypothesis**: there exists an inference archite
 
 We introduce the **Representational Convergence Conjecture (RCC)**: that the representation optimal for human governance (CAL's V at high SID) and the representation optimal for the generator's own computation converge — or are related by a tractable translation. If true, a single compressed state would simultaneously serve human oversight and generator compute-efficiency: the *north star* of the architecture.
 
-This paper reports the pre-experimental framework. Three conditions must be met before the L4 Efficiency Hypothesis can be empirically tested: (a) the composition operator C (L3) must be defined and validated, (b) the O(n²) flat-context baseline must be empirically measured on hardware, and (c) governance accuracy under both approaches must be quantified. Condition (b) is active: AMD-Instinct Labs measures the flat-context O(n²) curve on MI300X via `fa_dme`. Conditions (a) and (c) are deferred to their respective gates.
+This paper reports the framework and its now-met preconditions. Three conditions must hold before the L4 Efficiency Hypothesis can be empirically tested: (a) the composition operator C (L3) must be defined and validated, (b) the O(n²) flat-context baseline must be empirically measured on hardware, and (c) governance accuracy under both approaches must be quantified. **As of June 2026, (a) and (b) are met:** L3 closed with C = C_causal ∘ C_compress delivering κ(V)=1296 (195.6× compression) at causal conservation U≈0.86, and AMD-Instinct measured the flat-context curve at n^1.90 (R²=0.996, CONFIRMED quadratic). The κ vs n² cost contrast is therefore runnable on hardware; condition (c) — governance accuracy of M(V) vs flat-context — is the remaining gate (RCT-adjacent).
 
 **Keywords:** meta-inference, efficiency hypothesis, semantic compression, governance inference, tensor volume, representational convergence, AMD-Instinct, flash attention
 
@@ -100,21 +100,37 @@ The claim is conditional on the success of L3. If C fails to compress V while pr
 
 | Condition | Description | Status |
 |-----------|-------------|--------|
-| **(a)** C defined + κ(V) concrete | L3 composition operator validated on synthetic corpus; effective rank κ(V) measured | Pending — **gate L3** |
-| **(b)** O(n²) baseline measured empirically | Flat-context attention cost on real hardware (MI300X) for seqLen 512→4k | **Active — AMD-Instinct** |
-| **(c)** Governance accuracy under both approaches | Accuracy of M(V) vs. flat-context LLM on governance decisions; L2 corpus provides the reference | Pending — gate (a) |
+| **(a)** C defined + κ(V) concrete | L3 composition operator validated on synthetic corpus; effective rank κ(V) measured | **MET (2026-06) — L3 closed.** C = C_causal ∘ C_compress (dual Architecture A); κ(V)=1296 (195.6× compression), causal conservation U≈0.86 (75% of headroom recovered). See §3.5. |
+| **(b)** O(n²) baseline measured empirically | Flat-context attention cost on real hardware (MI300X) for seqLen 512→4k | **MET (2026-06) — AMD-Instinct.** `fa_robust` seqLen sweep: exponent n^1.90, R²=0.996, CONFIRMED quadratic. |
+| **(c)** Governance accuracy under both approaches | Accuracy of M(V) vs. flat-context LLM on governance decisions; L2 corpus provides the reference | Pending — gate (a)+(b) now met; this is the remaining gate (RCT-adjacent). |
 
-**Pre-registration required before testing the hypothesis.** Commit the exact statistical test and acceptance criteria before running any experiment that bears on conditions (a) or (c).
+With (a) and (b) met, the **κ vs n² cost contrast** (the hypothesis's quantitative core) is now runnable on hardware — L4-A delivers the (κ, G_pruned, U) object AMD's contrast consumes. Condition (c) — that M(V) decisions match or beat flat-context — is the remaining gate and is RCT-adjacent (Paper 2).
+
+**Pre-registration required before testing the hypothesis.** Commit the exact statistical test and acceptance criteria before running any experiment that bears on condition (c) or the at-scale cost contrast.
 
 ### 3.4 κ(V) as Structural Complexity
 
 κ(V) is the key operationalization. Three candidate definitions, ordered by tractability:
 
-1. **Effective rank of Tucker core G** — most tractable; directly from L3's Tucker decomposition. κ(V) = rank(G).
+1. **Effective rank of Tucker core G** — most tractable; directly from L3's Tucker decomposition. κ(V) = rank(G). **Adopted:** L3's S2 confirmed κ(V)=1296 at rank (8,3,3,3,6), a 195.6× compression of the session tensor, validated tractable (sub-linear in n_sessions).
 2. **Attractor entropy** — entropy of the distribution over attractor states in V; requires identifying attractors first.
-3. **Causal graph size** — number of edges in the recovered causal graph; requires S3 causal conservation test to succeed.
+3. **Causal graph size** — number of edges in the recovered causal graph; complementary to candidate 1 in L4-A's dual representation (|E|=2 after pruning), and the object the human governs with.
 
-Candidate 1 is the starting point: it is immediately available if L3's Tucker decomposition succeeds.
+Candidate 1 is the operative κ(V) for the cost contrast; candidate 3 is the governance object carried alongside it (see §3.5).
+
+### 3.5 L3 Result Summary — what C delivers to L4 (2026-06)
+
+L3 closed (characterization phase, ~95% per the methodological review). The path: Tucker preserves variance but not causal structure (S3-bis: reconstruction F1=0.135); a ground-truth-free causal metric U was validated (TCI); causality was shown to be **structural, not magnitude** (proxy audit); Tucker's failure mode is **spurious-edge fabrication, not loss** (Q_L3.2A: coverage and sign held, reachability/|E| exploded); and a **structural prune** to the raw causal support recovers 75% of the causal-conservation headroom **with no ground truth** (Form 1: U 0.441→0.862, raw↔GT gap = 0.000).
+
+The operator C delivered to L4 is **Architecture A (dual representation)**:
+
+```
+C: T → V = (V_Tucker, G_pruned)
+   V_Tucker : Tucker core, κ(V)=1296, 195.6× compression  → the cost object (O(κ) side)
+   G_pruned : causal graph pruned to the raw support, |E|=2 → the governance object
+```
+
+A reference meta-inference `M_ref` was shown to operate on this dual pair at (κ+|E|) cost **without re-running causal discovery** — the prune is *carried*, not *re-derived* (L4-A checks C1/C2/C5 all pass). The honest limitation, declared: **κ does not reflect the prune** — κ is the Tucker core's; the causal cleanup lives in the second object. Collapsing the two into a single volume V′ (so κ itself reflects causal sparsity) is **L4-B**, a research hypothesis requiring an inverse graph→tensor projection, gated on first characterizing the residual 25% (where U falls short of 1.0). L4-A is the operational baseline; L4-B is future work.
 
 ---
 
@@ -146,7 +162,7 @@ Whether such φ′ exists — and whether the human-optimal and compute-optimal 
 
 ### 4.5 Relation to AMD-Instinct
 
-`probe_mfma_mapping.hip` in AMD-Instinct already characterized the lane↔output mapping of `v_mfma_f32_16x16x16f16` — the low-level register access that coupling a generator to V at inference time would require. This makes the RCC empirically approachable from the hardware side, once C exists at L3.
+`probe_mfma_mapping.hip` in AMD-Instinct already characterized the lane↔output mapping of `v_mfma_f32_16x16x16f16` — the low-level register access that coupling a generator to V at inference time would require. With C now defined at L3 (2026-06), this makes the RCC empirically approachable from the hardware side.
 
 ### 4.6 Falsifiability
 
@@ -167,7 +183,7 @@ Failure of (b) — where minimizing governance-SID and minimizing generation los
 | Role | Timeline | Description |
 |------|----------|-------------|
 | **Rol 1 — Baseline** | Now (active) | Measure flat-context O(n²) attention cost curve (seqLen sweep 512→4k); confirm quadratic exponent ≈ 2 via log-log fit. This is condition (b) of the L4 Efficiency Hypothesis. |
-| **Rol 2 — Proxy M(V)** | Post gate-C | Kernel from which the RCC attempts to extract governance signal V during pre-fill. Requires C to exist first. |
+| **Rol 2 — Proxy M(V)** | Unblocked (gate-C closed 2026-06) | Kernel from which the RCC attempts to extract governance signal V during pre-fill. C now exists (L3 closed); this role is the active downstream work. |
 
 ### 5.2 Baseline Measurement Protocol (Rol 1)
 
@@ -199,14 +215,16 @@ and causal before the large timing-only runs.
 
 | Task | Owner | Status | Blocker |
 |------|-------|--------|---------|
-| `fa_robust` seqLen sweep 512→4k | AMD-Instinct | Ready (cold) | — |
-| Confirm quadratic regime (log-log, exponent ≈ 2) | AMD-Instinct | Next VM session | — |
-| Publish citable baseline note | AMD-Instinct | Pending | log-log result |
-| Composition operator C validated on synthetic (L3 S1–S4) | L3 | Pending | L3 pre-registration |
-| κ(V) concrete from Tucker decomposition | L3 | Pending | C validated |
-| Kernel proxy M(V): O(n²) flat vs O(κ) contrast | AMD-Instinct | Deferred | C / L3 gate |
-| Pre-register L4 Efficiency Hypothesis test | L4 | Pending | κ(V) definition confirmed |
-| L4 Efficiency Hypothesis — synthetic test | Both | Deferred | M(V) + C |
+| `fa_robust` seqLen sweep 512→4k | AMD-Instinct | ✅ Done — n^1.90, R²=0.996 | — |
+| Confirm quadratic regime (log-log, exponent ≈ 2) | AMD-Instinct | ✅ Done — CONFIRMED quadratic | — |
+| Composition operator C validated on synthetic (L3) | L3 | ✅ Done — L3 closed; C = C_causal ∘ C_compress | — |
+| κ(V) concrete from Tucker decomposition | L3 | ✅ Done — κ(V)=1296, 195.6× | C validated |
+| Reference M(V) operates on dual V at κ-bounded cost (L4-A) | L4 | ✅ Done — C1/C2/C5 pass | C, κ(V) |
+| Publish citable baseline note | AMD-Instinct | Pending | (log-log result ready) |
+| At-scale κ vs n² cost contrast on MI300X (seqLen 512→4k, D=128) | AMD-Instinct | **Active — unblocked by L4-A** | — |
+| Pre-register L4 Efficiency Hypothesis test (governance-accuracy, cond. c) | L4 | Pending | at-scale contrast |
+| L4 Efficiency Hypothesis — full test | Both | Pending — gates (a),(b) met | condition (c) |
+| Characterize residual 25% → L4-B (single-V via inverse projection) | L3/L4 | Frozen — opens after AMD contrast freeze | residual characterization |
 | RCC empirical probe (φ′ coupling test) | AMD-Instinct + L4 | Long-term | All above |
 
 ---
