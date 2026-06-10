@@ -7,9 +7,9 @@ jpcpol@gmail.com
 
 **Collaboration:** AMD-Instinct Labs (`fa_dme` on MI300X)
 
-**Version:** 0.2 — Draft / Working Paper (L3 gate closed)  
+**Version:** 0.3 — Draft / Working Paper (L3 gate closed · κ vs n² mechanism contrast run)  
 **Date:** June 2026  
-**Status:** L3 gate CLOSED (2026-06). Conditions (a) C+κ(V) and (b) O(n²) baseline both MET; the κ vs n² cost contrast is now runnable. Remaining gate: (c) governance accuracy (RCT-adjacent). M(V) reference operator validated (L4-A); production M(V) and the at-scale hardware contrast are the active work.  
+**Status:** L3 gate CLOSED (2026-06). Conditions (a) C+κ(V) and (b) O(n²) baseline both MET, and the **κ vs n² cost contrast has been executed on MI300X** (mechanism confirmed: flat-context couples to n at n^1.91, governance state decouples — §5.4). Remaining gate: (c) governance accuracy (RCT-adjacent). M(V) reference operator validated (L4-A); the at-scale/accuracy contrast is the active work. Results frozen (no L4-B until the freeze holds).  
 **Part of:** CAL architecture — [CAL pre-paper DOI 10.5281/zenodo.20430343](https://doi.org/10.5281/zenodo.20430343)  
 **Repository:** [github.com/jpcpol/Meta-Inference-Layer-L4](https://github.com/jpcpol/Meta-Inference-Layer-L4)  
 **License:** CC BY-NC 4.0 (this document) · AGPL-3.0 (src/)  
@@ -25,7 +25,7 @@ We formalize the **L4 Efficiency Hypothesis**: there exists an inference archite
 
 We introduce the **Representational Convergence Conjecture (RCC)**: that the representation optimal for human governance (CAL's V at high SID) and the representation optimal for the generator's own computation converge — or are related by a tractable translation. If true, a single compressed state would simultaneously serve human oversight and generator compute-efficiency: the *north star* of the architecture.
 
-This paper reports the framework and its now-met preconditions. Three conditions must hold before the L4 Efficiency Hypothesis can be empirically tested: (a) the composition operator C (L3) must be defined and validated, (b) the O(n²) flat-context baseline must be empirically measured on hardware, and (c) governance accuracy under both approaches must be quantified. **As of June 2026, (a) and (b) are met:** L3 closed with C = C_causal ∘ C_compress delivering κ(V)=1296 (195.6× compression) at causal conservation U≈0.86, and AMD-Instinct measured the flat-context curve at n^1.90 (R²=0.996, CONFIRMED quadratic). The κ vs n² cost contrast is therefore runnable on hardware; condition (c) — governance accuracy of M(V) vs flat-context — is the remaining gate (RCT-adjacent).
+This paper reports the framework and its now-met preconditions. Three conditions must hold before the L4 Efficiency Hypothesis can be empirically tested: (a) the composition operator C (L3) must be defined and validated, (b) the O(n²) flat-context baseline must be empirically measured on hardware, and (c) governance accuracy under both approaches must be quantified. **As of June 2026, (a) and (b) are met:** L3 closed with C = C_causal ∘ C_compress delivering κ(V)=1296 (195.6× compression) at causal conservation U≈0.86, and AMD-Instinct measured the flat-context curve at n^1.90–1.91 (R²≈0.997, CONFIRMED quadratic across two independent runs). With both met, the **κ vs n² cost contrast was executed on MI300X**: the flat-context cost grows as a power law in artifact volume (≈n^1.91) while the governance-state inference cost is bounded by κ(V) and **independent of n** — the decoupling ratio grows to 52.8× across seqLen 512→4096. This demonstrates the **mechanism** of the L4 Efficiency Hypothesis (cost coupling vs decoupling), not a production-scale or accuracy claim. Condition (c) — governance accuracy of M(V) vs flat-context — is the remaining gate (RCT-adjacent).
 
 **Keywords:** meta-inference, efficiency hypothesis, semantic compression, governance inference, tensor volume, representational convergence, AMD-Instinct, flash attention
 
@@ -104,7 +104,7 @@ The claim is conditional on the success of L3. If C fails to compress V while pr
 | **(b)** O(n²) baseline measured empirically | Flat-context attention cost on real hardware (MI300X) for seqLen 512→4k | **MET (2026-06) — AMD-Instinct.** `fa_robust` seqLen sweep: exponent n^1.90, R²=0.996, CONFIRMED quadratic. |
 | **(c)** Governance accuracy under both approaches | Accuracy of M(V) vs. flat-context LLM on governance decisions; L2 corpus provides the reference | Pending — gate (a)+(b) now met; this is the remaining gate (RCT-adjacent). |
 
-With (a) and (b) met, the **κ vs n² cost contrast** (the hypothesis's quantitative core) is now runnable on hardware — L4-A delivers the (κ, G_pruned, U) object AMD's contrast consumes. Condition (c) — that M(V) decisions match or beat flat-context — is the remaining gate and is RCT-adjacent (Paper 2).
+With (a) and (b) met, the **κ vs n² cost contrast** (the hypothesis's quantitative core) was **executed on MI300X** (§5.4): L4-A delivers the (κ, G_pruned, U) object, and the contrast confirms the cost-law decoupling that the hypothesis predicts (mechanism level). Condition (c) — that M(V) decisions match or beat flat-context — is the remaining gate and is RCT-adjacent (Paper 2). The mechanism contrast does **not** substitute for (c): it shows the cost shape, not that the cheaper inference is as accurate.
 
 **Pre-registration required before testing the hypothesis.** Commit the exact statistical test and acceptance criteria before running any experiment that bears on condition (c) or the at-scale cost contrast.
 
@@ -182,13 +182,13 @@ Failure of (b) — where minimizing governance-SID and minimizing generation los
 
 | Role | Timeline | Description |
 |------|----------|-------------|
-| **Rol 1 — Baseline** | Now (active) | Measure flat-context O(n²) attention cost curve (seqLen sweep 512→4k); confirm quadratic exponent ≈ 2 via log-log fit. This is condition (b) of the L4 Efficiency Hypothesis. |
+| **Rol 1 — Baseline** | ✅ Done (2026-06) | Measured flat-context O(n²) attention cost curve (seqLen sweep 512→4k); confirmed quadratic exponent (n^1.90–1.91, R²≈0.997) via log-log fit, across two independent runs. This is condition (b) of the L4 Efficiency Hypothesis. |
 | **Rol 2 — Proxy M(V)** | Unblocked (gate-C closed 2026-06) | Kernel from which the RCC attempts to extract governance signal V during pre-fill. C now exists (L3 closed); this role is the active downstream work. |
 
 ### 5.2 Baseline Measurement Protocol (Rol 1)
 
-Experiment: `fa_robust.hip` seqLen sweep (implemented, cold-staged in
-`amd-instinct-labs/research/flash-attention-mi300x/`, awaiting VM run)
+Experiment: `fa_robust.hip` seqLen sweep (executed on MI300X, 2026-06; results in
+`amd-instinct-labs/research/flash-attention-mi300x/results/`)
 - seqLen: {512, 768, 1024, 1536, 2048, 3072, 4096} — all multiples of Br=16 and Bc=64
 - D = 128 (LLM-realistic head dimension)
 - Metric: median latency per seqLen; log-log least-squares regression → exponent p + R²
@@ -209,6 +209,62 @@ and causal before the large timing-only runs.
 - ❌ Do NOT integrate `fa_dme` into TCO pipeline — TCO has no token attention layer (it uses Claude API over T[d,i,j,k])
 - ❌ Do NOT claim RCC validated from Rol 1 alone — Rol 2 requires C from L3
 
+### 5.4 The κ vs n² Cost Contrast — Result (2026-06)
+
+With C delivered by L3 (§3.5) and the O(n²) baseline measured (§5.2), the cost
+contrast was run on MI300X (gfx942, ROCm 7.2), pre-registered as S5
+(`PRE_REGISTRATION_S5_COST_CONTRAST.md`). It combines the two cost laws:
+
+```
+O(n²) side (flat context)   : Cost_flat(n) = 8.07e-4 · n^1.907   (R²=0.9967, D=128, MFMA)
+O(κ) side (governance state): Cost_gov     = κ(V_Tucker) + |E| ≈ 1322   (independent of n)
+```
+
+The reported quantity is the **decoupling ratio** D(n) = Cost_flat(n)/Cost_gov,
+normalized to n=512:
+
+| seqLen n | Cost_flat | Cost_gov | D(n) |
+|----------|-----------|----------|------|
+| 512  | 118.6 µs | 1322 (const) | 1.00× |
+| 1024 | 444.8 µs | 1322 (const) | 3.75× |
+| 2048 | 1668.3 µs | 1322 (const) | 14.07× |
+| 4096 | 6257.6 µs | 1322 (const) | **52.77×** |
+
+`Cost_flat` are values of the **fitted law** `c·n^p` (the column from which D(n) is
+computed in `s5_cost_contrast.py`), not the raw measured per-seqLen latencies — those
+appear in the baseline note (n^1.90 sweep, e.g. 103.7 / 6015.1 µs at n=512 / 4096) and
+agree with the fit within measurement noise. D(n) is the dimensionless ratio of the two
+laws, so it is invariant to this distinction.
+
+D(n) grows monotonically with a fitted exponent of 1.907 (R²=1.0) — i.e. the gap
+widens with artifact volume exactly as the flat-context law grows, while the
+governance-state cost stays flat. **Mechanism confirmed:** flat-context inference
+cost is coupled to n; governance-state inference cost is bounded by κ(V) and
+decoupled from n.
+
+**Three honesty constraints, stated (inherited from L4-A's declared limitations):**
+
+1. **Different `n`.** κ(V)=1296 is at the governance-corpus scale (n=30 sessions,
+   11 dimensions), **not** the seqLen scale of the baseline (512→4096 tokens). S5
+   does not plug κ and seqLen onto one axis to claim a single speedup number; it
+   contrasts the two cost **laws** (coupling vs decoupling). The decoupling ratio is
+   a dimensionless shape comparison, not a wall-clock speedup at a fixed n.
+2. **Mechanism, not production scale.** This shows the cost *shape* the hypothesis
+   predicts; it does not establish that κ(V)=1296 holds at production governance
+   scale, which needs a larger L2 corpus.
+3. **κ does not reflect the prune.** κ is the Tucker core's, fixed before causal
+   pruning; the causal cleanup lives in G_pruned (the dual representation, §3.5).
+
+The optional hardware probe of the O(κ) side (giving it a wall-clock latency
+comparable to the O(n²) side) was **omitted** per the pre-registration: the
+n-independent read-count is already the correct cost object, and a new MFMA kernel
+for a 1296-element core was not justified. It is noted as future work.
+
+**Freeze.** Per the methodological review, S5 results are frozen: the residual-25%
+characterization (precondition for L4-B's single-representation V′) does not open
+until the freeze holds. This prevents getting ahead of L4-B before knowing what the
+residual contains.
+
 ---
 
 ## 6. Roadmap with Gates
@@ -221,8 +277,8 @@ and causal before the large timing-only runs.
 | κ(V) concrete from Tucker decomposition | L3 | ✅ Done — κ(V)=1296, 195.6× | C validated |
 | Reference M(V) operates on dual V at κ-bounded cost (L4-A) | L4 | ✅ Done — C1/C2/C5 pass | C, κ(V) |
 | Publish citable baseline note | AMD-Instinct | Pending | (log-log result ready) |
-| At-scale κ vs n² cost contrast on MI300X (seqLen 512→4k, D=128) | AMD-Instinct | **Active — unblocked by L4-A** | — |
-| Pre-register L4 Efficiency Hypothesis test (governance-accuracy, cond. c) | L4 | Pending | at-scale contrast |
+| κ vs n² cost contrast on MI300X — **mechanism** (seqLen 512→4k, D=128) | AMD-Instinct | ✅ Done (S5, 2026-06) — D(n)→52.8×, mechanism confirmed; frozen | — |
+| Pre-register L4 Efficiency Hypothesis test (governance-accuracy, cond. c) | L4 | Pending | governance corpus (RCT) |
 | L4 Efficiency Hypothesis — full test | Both | Pending — gates (a),(b) met | condition (c) |
 | Characterize residual 25% → L4-B (single-V via inverse projection) | L3/L4 | Frozen — opens after AMD contrast freeze | residual characterization |
 | RCC empirical probe (φ′ coupling test) | AMD-Instinct + L4 | Long-term | All above |
