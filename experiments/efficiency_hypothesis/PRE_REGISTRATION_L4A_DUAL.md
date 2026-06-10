@@ -89,15 +89,21 @@ O(κ) side, the raw artifact count n for the O(n²) side (baseline already measu
 
 ## 3. The question L4-A answers (fixed a priori)
 
-> Does the dual representation `(V_Tucker, G_pruned)` deliver the expected
-> governance gain — i.e. is the pruned graph a *sufficient* governance object —
-> while κ(V_Tucker) remains the tractable cost quantity?
+The success criterion is NOT recovering more U (75% is already recovered). It is
+**operability of the dual representation** (consultant, adopted):
 
-This is **not** the efficiency-hypothesis test itself (that needs AMD's M(V) cost
-run, condition (c)). L4-A is the **operator that makes that test runnable**: it
-produces the (κ, G_pruned, U) triple AMD's contrast consumes. The verdict here is
-whether the operator is well-formed and the triple is coherent, not whether O(κ) <
-O(n²) (that is AMD's measurement).
+> Can a meta-inference function M operate on the pair `(V_Tucker, G_pruned)` at cost
+> close to κ(V_Tucker) while conserving Ω₀?
+
+This is **not** the efficiency-hypothesis test itself (the full O(κ) vs O(n²)
+contrast needs AMD's hardware run, condition (b)+(c)). L4-A is the **operator that
+makes that test runnable** AND a software-level demonstration that M can *consume*
+the dual object at κ-bounded work. Concretely: a reference `M_ref(V_A)` that reads
+the κ(V_Tucker)-sized core and the |E|≈2 pruned graph, performs the four L4
+capabilities (causal discovery / drift / conflict / policy) **without re-running
+PCMCI on the full reconstruction**, and whose work scales with κ + |E|, not with the
+n² raw-artifact pairs. If M must re-derive the graph from scratch, the dual
+representation failed its purpose (the prune would not be *carried*, only *measured*).
 
 ## 4. Confirmatory checks (fixed a priori)
 
@@ -114,14 +120,23 @@ O(n²) (that is AMD's measurement).
   explicitly that κ does NOT reflect the prune (κ is the Tucker core's, the prune
   lives in G_pruned). L4-A does not claim a κ reduction from pruning. Claiming
   otherwise would be the A-vs-B confusion this split exists to prevent.
+- **C5 — Operability at κ-bounded cost (PRIMARY, the consultant's success
+  criterion).** A reference `M_ref(V_A)` consumes the dual pair and performs the
+  four L4 capabilities reading ONLY the κ(V_Tucker)-sized core + the |E|-edge pruned
+  graph — it must NOT re-run PCMCI on the full reconstruction. PASS if (i) M_ref's
+  work scales with (κ + |E|), not with the n² raw-artifact pairs, and (ii) the Ω₀ it
+  reports off `G_pruned` matches C2's values (the carried graph is sufficient for the
+  inference). This is what makes the representation *operable*, not merely
+  *well-formed* — the actual point of L4-A.
 
 ## 5. Verdict logic (fixed a priori)
 
-| C1 | C2 | Verdict |
-|----|----|---------|
-| PASS | PASS | **L4-A operator validated as the dual-representation baseline.** AMD can run the cost contrast on (κ(V_Tucker), n). L4-B (single-V via inverse projection) becomes the next research question, gated on characterizing the residual. |
-| PASS | FAIL | The pruned graph does NOT preserve Ω₀ as an operator (vs as a one-off) — investigate determinism/aggregation before handing to AMD. |
-| FAIL | — | The prune is not reproducible as an operator — fix before any downstream use. |
+| C1 | C2 | C5 | Verdict |
+|----|----|----|---------|
+| PASS | PASS | PASS | **L4-A validated: the dual representation is operable at κ-bounded cost.** L3 fully closed; AMD can run the cost contrast on (κ(V_Tucker), n); RCC gets an operational representation. L4-B (single-V via inverse projection) becomes the next research question, gated on characterizing the residual. |
+| PASS | PASS | FAIL | M cannot operate on the dual pair without re-deriving the graph — the prune is *measured* but not *carried*. The dual representation is insufficient; this itself motivates L4-B sooner. |
+| PASS | FAIL | — | The pruned graph does NOT preserve Ω₀ as an operator (vs as a one-off) — investigate determinism/aggregation before handing to AMD. |
+| FAIL | — | — | The prune is not reproducible as an operator — fix before any downstream use. |
 
 ## 6. What L4-A explicitly does NOT do
 
@@ -141,6 +156,20 @@ O(n²) (that is AMD's measurement).
   support (self-referential), PCMCI ParCorr tau=1 pc_alpha=0.01 (S3-bis/TCI machinery).
 - Delivered triple: (κ(V_Tucker)=1296, G_pruned, U≈0.862) + Ω₀(G_pruned).
 - C1 reproducibility (byte-identical), C2 Ω₀ sufficiency (U≥0.80 ∧ C≥0.95 ∧ S=1.0),
-  C3 κ exposure (report), C4 honesty (κ ≠ prune, declared).
+  C3 κ exposure (report), C4 honesty (κ ≠ prune, declared), **C5 operability
+  (PRIMARY): M_ref reads only core+pruned-graph at (κ+|E|) cost, no PCMCI re-run.**
 - Corpus S1-bis (t=48). AMD O(n²) baseline already measured (n^1.90, R²=0.9964).
 - Architecture A only. B is a separately pre-registered research hypothesis.
+
+## 8. Execution sequence (consultant, fixed)
+
+1. Run L4-A exactly as pre-registered.
+2. Deliver the dual object `(V_Tucker, G_pruned)` to AMD.
+3. Obtain the κ vs n² cost contrast.
+4. **Freeze results.**
+5. ONLY THEN open the prereg characterizing the residual 25% (where it lives:
+   weights / non-linearity / cycles / higher-order) — the precondition for L4-B.
+
+The largest methodological risk now is **not** falling short — it is getting ahead
+of L4-B before knowing what the residual 25% actually contains. The freeze enforces
+that order.
