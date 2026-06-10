@@ -1,0 +1,118 @@
+{
+  "experiment": "L4-A \u2014 Dual-Representation Operational Baseline",
+  "pre_registration": "PRE_REGISTRATION_L4A_DUAL.md",
+  "operator": "C_A: T -> (V_Tucker, G_pruned)",
+  "tucker_rank": [
+    8,
+    3,
+    3,
+    3,
+    6
+  ],
+  "kappa": 1296,
+  "n_params_full": 253440,
+  "compression_ratio": 195.55555555555554,
+  "C1_reproducible": true,
+  "C2_omega0_sufficiency": {
+    "pass": true,
+    "per_graph": {
+      "G1": {
+        "U": 0.8638950933175028,
+        "C": 1.0,
+        "S": 1.0,
+        "E": 2,
+        "kappa": 1296
+      },
+      "G2": {
+        "U": 0.8400733461542704,
+        "C": 1.0,
+        "S": 1.0,
+        "E": 2,
+        "kappa": 1296
+      },
+      "G3": {
+        "U": 0.8828122342159439,
+        "C": 1.0,
+        "S": 1.0,
+        "E": 2,
+        "kappa": 1296
+      }
+    },
+    "gates": {
+      "U>=": 0.8,
+      "C>=": 0.95,
+      "S=": 1.0
+    }
+  },
+  "C4_honesty": "kappa is the Tucker core's; the prune lives in G_pruned. No kappa-reduction claimed.",
+  "C5_operability": {
+    "pass": true,
+    "per_graph": {
+      "G1": {
+        "cost_reads": 1322,
+        "graph_side": 26,
+        "kappa_plus_E": 1298,
+        "omega0_E": 2
+      },
+      "G2": {
+        "cost_reads": 1322,
+        "graph_side": 26,
+        "kappa_plus_E": 1298,
+        "omega0_E": 2
+      },
+      "G3": {
+        "cost_reads": 1322,
+        "graph_side": 26,
+        "kappa_plus_E": 1298,
+        "omega0_E": 2
+      }
+    },
+    "note": "graph-side reads << n^2; kappa term is the cost object AMD measures"
+  },
+  "verdict": {
+    "c1": true,
+    "c2": true,
+    "c5": true,
+    "text": "L4-A VALIDATED: the dual representation is operable at kappa-bounded cost. L3 fully closed; AMD can run the kappa vs n^2 contrast on (kappa(V_Tucker), n). L4-B (single-V) is the next research question, gated on characterizing the residual 25%."
+  },
+  "delivered_to_AMD": {
+    "kappa_V_Tucker": 1296,
+    "G_pruned_per_graph": {
+      "G1": [
+        [
+          3,
+          5
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "G2": [
+        [
+          6,
+          1
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "G3": [
+        [
+          4,
+          8
+        ],
+        [
+          8,
+          9
+        ]
+      ]
+    },
+    "U_per_graph": {
+      "G1": 0.8638950933175028,
+      "G2": 0.8400733461542704,
+      "G3": 0.8828122342159439
+    }
+  }
+}
